@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Selector App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0c0c0c;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #95abb4;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(253, 252, 252, 0.929);
+        .results-box {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #000;
+            height: 100px;
+            width: 100%;
+            text-align: center;
+            line-height: 1.5; 
+            color: rgb(70, 113, 148);
+            font-weight: bold;
+            border-radius: 5px;
+            overflow-y: auto; 
+            word-wrap: break-word; 
+            }
+
+            max-width: 600px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #0a0a0a;
+        }
+
+        button, input[type="button"] {
+            background-color: #1b212b;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            
+        }
+
+        button:hover, input[type="button"]:hover {
+            background-color: #cb845b;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 200px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #eef;
+            border-radius: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cat Selector App</h1>
+
+    <button onclick="loadCatNames()">All cats Names</button>
+    <input type="text" id="healthIssue" placeholder="Health Issues (e.g., 2)">
+    <input type="button" value="Search by Health Issues" onclick="loadCatsByHealth()">
+
+    <div>
+        <label><input type="radio" id="imperial" name="unit" value="imperial" checked> Imperial</label>
+        <label><input type="radio" id="metric" name="unit" value="metric"> Metric</label>
+        <button onclick="loadCatWeights()">Weight</button>
+    </div>
+
+    <button onclick="loadIntelligenceAndFriendly()">Intelligence - Friendly</button>
+    <button onclick="averageIntelligence()">Average Intelligence</button>
+    <button onclick="averageIntelligenceChildFriendly()">Average Intelligence for Child Friendly</button>
+
+    <div id="content" class="output"></div>
+</div>
+
+<script>
+    const apiUrl = "https://api.thecatapi.com/v1/breeds";
+
+    function loadCatNames() {
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                let output = '<h3>All Cat Names:</h3>';
+                data.forEach(cat => {
+                    output += `${cat.name}<br>`;
+                });
+                document.getElementById("content").innerHTML = output;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function loadCatsByHealth() {
+    const healthIssue = document.getElementById("healthIssue").value;
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            let output = `<h3>Cats with Health Issue #${healthIssue}:</h3>`;
+            let count= 0;
+
+            data.forEach(cat => {
+                if (cat.health_issues == healthIssue) {
+                    output += `${cat.name}<br>`;
+                    count++;
+                }
+            });
+
+            output += `<br><strong>Total cats with health issue #${healthIssue}: ${count}</strong>`;
+            document.getElementById("content").innerHTML = output;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+    function loadCatWeights() {
+    const unit = document.querySelector('input[name="unit"]:checked').value;
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            let output = `<h3>Weights in ${unit.charAt(0).toUpperCase() + unit.slice(1)}:</h3>`;
+            output += "<ul style='list-style-type:none;'>";  
+            data.forEach(cat => {
+                let weight;
+                if (unit === "imperial") {
+                weight = `${cat.weight.imperial}`;
+                } else {
+                    weight = `${cat.weight.metric}`;
+                }
+            
+                output += `<li>${weight}</li>`;
+            });
+
+            output += "</ul>";  
+            document.getElementById("content").innerHTML = output;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+    function loadIntelligenceAndFriendly() {
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            let output = `
+                <h3>Intelligence - Friendly</h3>
+                <table>
+                    <tr><th>I</th><th>F</th></tr>
+                    <tr><td>---</td><td>---</td></tr>
+            `;
+            data.forEach(cat => {
+                output += `
+                    <tr>
+                        <td>${cat.intelligence}.</td>
+                        <td>${cat.child_friendly}</td>
+                    </tr>
+                `;
+            });
+            output += `</table>`;
+            document.getElementById("content").innerHTML = output;
+        })
+        .catch(error => console.error('Error:', error));
+}
+  
+
+    function averageIntelligence() {
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                let totalIntelligence = 0;
+                data.forEach(cat => {
+                    totalIntelligence += cat.intelligence;
+                });
+                const avg = (totalIntelligence / data.length).toFixed(2);
+                document.getElementById("content").innerHTML = `<h3>Average Intelligence: ${avg}</h3>`;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function averageIntelligenceChildFriendly() {
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                let totalIntelligence = 0;
+                let count = 0;
+                data.forEach(cat => {
+                    if (cat.child_friendly >= 4) {
+                        totalIntelligence += cat.intelligence;
+                        count++;
+                    }
+                });
+                const avg = (totalIntelligence / count).toFixed(2);
+                document.getElementById("content").innerHTML = `<h3>Average Intelligence for Child-Friendly Cats: ${avg}</h3>`;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+
+</body>
+</html>
